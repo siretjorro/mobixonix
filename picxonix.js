@@ -207,6 +207,7 @@
         if (tLevel || tLastFrame || !data || !data.image) return;
         var img = new Image();
         img.onload = function() {
+            console.log("applying level")
             applyLevel(img, data);
         };
         img.src = data.image;
