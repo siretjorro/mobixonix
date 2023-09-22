@@ -6,32 +6,32 @@
  */
 
 // requestAnimationFrame/cancelAnimationFrame polyfill:
-(function() {
+(function () {
     var tLast = 0;
     var vendors = ['webkit', 'moz'];
-    for(var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
+    for (var i = 0; i < vendors.length && !window.requestAnimationFrame; ++i) {
         var v = vendors[i];
-        window.requestAnimationFrame = window[v+'RequestAnimationFrame'];
-        window.cancelAnimationFrame = window[v+'CancelAnimationFrame'] ||
-            window[v+'CancelRequestAnimationFrame'];
+        window.requestAnimationFrame = window[v + 'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[v + 'CancelAnimationFrame'] ||
+            window[v + 'CancelRequestAnimationFrame'];
     }
     if (!window.requestAnimationFrame)
-        window.requestAnimationFrame = function(callback, element) {
+        window.requestAnimationFrame = function (callback, element) {
             var tNow = Date.now();
             var dt = Math.max(0, 17 - tNow + tLast);
-            var id = setTimeout(function() { callback(tNow + dt); }, dt);
+            var id = setTimeout(function () { callback(tNow + dt); }, dt);
             tLast = tNow + dt;
             return id;
         };
     if (!window.cancelAnimationFrame)
-        window.cancelAnimationFrame = function(id) {
+        window.cancelAnimationFrame = function (id) {
             clearTimeout(id);
         };
 }());
 
-(function() {
+(function () {
 
-    window.picxonix = function(v1, v2) {
+    window.picxonix = function (v1, v2) {
         if (typeof v1 != 'string') {
             return init(v1, v2);
         }
@@ -49,7 +49,7 @@
                 setPlayMode(v2);
                 break;
             case 'cursorDir': // set the cursor movement direction
-                typeof v2 == 'string'? setDir(v2) : setDirToward(v2);
+                typeof v2 == 'string' ? setDir(v2) : setDirToward(v2);
                 break;
             case 'cursorSpeed': // set the cursor speed
                 setCursorSpeed(v2);
@@ -72,14 +72,15 @@
         height: 400,
         sizeCell: 10,
         colorFill: '#000000',
-        colorBorder: '#00aaaa',
+        colorBorder: '#000000',
         colorBall: '#ffffff',
         colorBallIn: '#000000',
-        colorWarder: '#000000',
+        colorWarder: '#f80000',
         colorWarderIn: '#f80000',
-        colorCursor: '#aa00aa',
-        colorCursorIn: '#00aaaa',
-        colorTrail: '#a800a8',
+        colorCursor: '#EBD026',
+        colorCursorIn: '#EBD026',
+        colorTrail: '#ffffff',
+        colorTrailCollision: '#E65857',
         timeoutCollision: 1000,
         callback: null,
         callbackOnFrame: false
@@ -138,28 +139,28 @@
         var oWrap = document.createElement('div');
         oWrap.style.position = 'relative';
         // create background (picture) canvas:
-        (function() {
+        (function () {
             var canvas = document.createElement('canvas');
             ctxPic = canvas.getContext('2d');
             canvas.width = width;
             canvas.height = height;
             canvas.style.position = 'absolute';
-            canvas.style.left = canvas.style.top = (2*sizeCell) + 'px';
+            canvas.style.left = canvas.style.top = (2 * sizeCell) + 'px';
             ctxPic.fillStyle = cfgMain.colorTrail;
             ctxPic.fillRect(0, 0, width, height);
             oWrap.appendChild(canvas);
         }());
         // create main canvas:
-        (function() {
+        (function () {
             var canvas = document.createElement('canvas');
             ctxMain = canvas.getContext('2d');
-            canvas.width = width+ 4*sizeCell;
-            canvas.height = height+ 4*sizeCell;
+            canvas.width = width + 4 * sizeCell;
+            canvas.height = height + 4 * sizeCell;
             canvas.style.position = 'absolute';
             canvas.style.left = canvas.style.top = 0;
             fillCanvas();
             ctxMain.fillStyle = cfgMain.colorFill;
-            ctxMain.fillRect(2*sizeCell, 2*sizeCell, width, height);
+            ctxMain.fillRect(2 * sizeCell, 2 * sizeCell, width, height);
             oWrap.appendChild(canvas);
         }());
         elContainer.appendChild(oWrap);
@@ -206,7 +207,7 @@
     function loadLevel(data) {
         if (tLevel || tLastFrame || !data || !data.image) return;
         var img = new Image();
-        img.onload = function() {
+        img.onload = function () {
             console.log("applying level")
             applyLevel(img, data);
         };
@@ -217,11 +218,11 @@
         setPlayMode(false);
         endLevel(false);
         setLevelData(cfgMain.width, cfgMain.height);
-        ctxMain.canvas.width = width+ 4*sizeCell;
-        ctxMain.canvas.height = height+ 4*sizeCell;
+        ctxMain.canvas.width = width + 4 * sizeCell;
+        ctxMain.canvas.height = height + 4 * sizeCell;
         fillCanvas();
         ctxMain.fillStyle = cfgMain.colorFill;
-        ctxMain.fillRect(2*sizeCell, 2*sizeCell, width, height);
+        ctxMain.fillRect(2 * sizeCell, 2 * sizeCell, width, height);
         ctxPic.canvas.width = width;
         ctxPic.canvas.height = height;
     }
@@ -230,13 +231,14 @@
         imgPic = img;
         merge(cfgLevel, data, true);
         setLevelData(img.width, img.height);
-        ctxMain.canvas.width = width+ 4*sizeCell;
-        ctxMain.canvas.height = height+ 4*sizeCell;
+        console.log("image width: " + img.width + ", height: " + img.height)
+        ctxMain.canvas.width = width + 4 * sizeCell;
+        ctxMain.canvas.height = height + 4 * sizeCell;
         fillCanvas();
         cellset.reset();
         ctxPic.canvas.width = width;
         ctxPic.canvas.height = height;
-        ctxPic.drawImage(imgPic, 0, 0, width, height, 0, 0, width, height);
+        ctxPic.drawImage(imgPic, 0, 0, width, height);
         cfgMain.callback && cfgMain.callback(3);
         if (data.disabled) {
             endLevel(true); return;
@@ -263,19 +265,19 @@
         tLevel = 0;
         if (!bClear) return;
         fillCanvas();
-        ctxMain.clearRect(2*sizeCell, 2*sizeCell, width, height);
+        ctxMain.clearRect(2 * sizeCell, 2 * sizeCell, width, height);
     }
 
     function setLevelData(w, h) {
-        if (w) width = w - w % (2*sizeCell);
-        if (h) height = h - h % (2*sizeCell);
+        if (w) width = w - w % (2 * sizeCell);
+        if (h) height = h - h % (2 * sizeCell);
         if (cfgLevel.nBalls) nBalls = cfgLevel.nBalls;
         if (cfgLevel.nWarders) nWarders = cfgLevel.nWarders;
     }
 
     function setPlayMode(bOn) {
         if (bOn ^ !tLastFrame) return;
-        tLastFrame? endLoop() : startLoop();
+        tLastFrame ? endLoop() : startLoop();
     }
 
     function setDir(key) {
@@ -296,14 +298,14 @@
             if (dc == 0) return;
             dir = dirset.find(dx, dy);
             if (dir % 90 != 0) {
-                var dir1 = dir-45, dir2 = dir+45;
-                dir = dir1 % 180 == 0 ^ dc < 0? dir1 : dir2;
+                var dir1 = dir - 45, dir2 = dir + 45;
+                dir = dir1 % 180 == 0 ^ dc < 0 ? dir1 : dir2;
             }
         }
         else {
-            var delta = dirCr % 180? xc - posCr[0] : yc - posCr[1];
+            var delta = dirCr % 180 ? xc - posCr[0] : yc - posCr[1];
             if (!delta) return;
-            dir = (delta > 0? 0 : 180) + (dirCr % 180? 0 : 90);
+            dir = (delta > 0 ? 0 : 180) + (dirCr % 180 ? 0 : 90);
         }
         cursor.setDir(dir);
     }
@@ -328,13 +330,19 @@
 
     // The main animation loop
     function loop(now) {
-        var dt = tLastFrame? (now - tLastFrame) / 1000 : 0;
+        var dt = tLastFrame ? (now - tLastFrame) / 1000 : 0;
         bCollision = bConquer = false;
         if (!tLastFrame || update(dt)) {
             render();
             tLastFrame = now;
         }
         if (bCollision) {
+            // var rect = cellset.fullTrailLine();
+            // console.log("last trail: " + rect)
+            // for (var i = 0; i < rect.length; i++) {
+            //     console.log("coloring: " + rect[i])
+            //     fillCellArea.apply(null, [cfgMain.colorTrailCollision].concat(rect[i]));
+            // }
             lock();
             cfgMain.callback && cfgMain.callback(1);
             return;
@@ -399,8 +407,8 @@
 
     function buildLevelState() {
         return {
-            width: width+ 4*sizeCell,
-            height: height+ 4*sizeCell,
+            width: width + 4 * sizeCell,
+            height: height + 4 * sizeCell,
             play: Boolean(tLastFrame),
             posCursor: cursor.pos(),
             warders: nWarders,
@@ -415,14 +423,14 @@
         var aShuffle = aData.slice();
         var wCell = aShuffle.shift();
         var nShuffle = aShuffle.length;
-        var nCols = 2* Math.floor(width/ 2/ wCell);
-        var nRows = 2* Math.floor(height/ 2/ wCell);
+        var nCols = 2 * Math.floor(width / 2 / wCell);
+        var nRows = 2 * Math.floor(height / 2 / wCell);
         var canvas = document.createElement('canvas');
         var ctxTmp = canvas.getContext('2d');
         canvas.width = wCell;
         canvas.height = wCell;
-        for (var i = 0; i < nShuffle; i+=2) {
-            var ic1 = aShuffle[i], ic2 = aShuffle[i+1];
+        for (var i = 0; i < nShuffle; i += 2) {
+            var ic1 = aShuffle[i], ic2 = aShuffle[i + 1];
             var x1 = ic1 % nCols * wCell, y1 = Math.floor(ic1 / nCols) * wCell;
             var x2 = ic2 % nCols * wCell, y2 = Math.floor(ic2 / nCols) * wCell;
             ctxTmp.drawImage(ctxPic.canvas, x1, y1, wCell, wCell, 0, 0, wCell, wCell);
@@ -433,26 +441,26 @@
 
     function fillCanvas() {
         ctxMain.fillStyle = cfgMain.colorBorder;
-        ctxMain.fillRect(0, 0, width+ 4*sizeCell, height+ 4*sizeCell);
+        ctxMain.fillRect(0, 0, width + 4 * sizeCell, height + 4 * sizeCell);
     }
 
     function drawCellImg(img, x, y) {
         ctxMain.drawImage(img,
             0, 0, sizeCell, sizeCell,
-            (x+2)*sizeCell, (y+2)*sizeCell, sizeCell, sizeCell
+            (x + 2) * sizeCell, (y + 2) * sizeCell, sizeCell, sizeCell
         );
     }
 
     function clearCellArea(x, y, w, h) {
         ctxMain.clearRect(
-            (x+2)*sizeCell, (y+2)*sizeCell, (w || 1)* sizeCell, (h || 1)* sizeCell
+            (x + 2) * sizeCell, (y + 2) * sizeCell, (w || 1) * sizeCell, (h || 1) * sizeCell
         );
     }
 
     function fillCellArea(color, x, y, w, h) {
         ctxMain.fillStyle = color;
         ctxMain.fillRect(
-            (x+2)*sizeCell, (y+2)*sizeCell, (w || 1)* sizeCell, (h || 1)* sizeCell
+            (x + 2) * sizeCell, (y + 2) * sizeCell, (w || 1) * sizeCell, (h || 1) * sizeCell
         );
     }
 
@@ -461,12 +469,12 @@
         vecs: {
             0: [1, 0], 45: [1, 1], 90: [0, 1], 135: [-1, 1], 180: [-1, 0], 225: [-1, -1], 270: [0, -1], 315: [1, -1]
         },
-        get: function(v) {
-            return v in this.vecs? this.vecs[v] : [0, 0];
+        get: function (v) {
+            return v in this.vecs ? this.vecs[v] : [0, 0];
         },
-        find: function(x, y) {
-            x = x == 0? 0 : (x > 0? 1 : -1);
-            y = y == 0? 0 : (y > 0? 1 : -1);
+        find: function (x, y) {
+            x = x == 0 ? 0 : (x > 0 ? 1 : -1);
+            y = y == 0 ? 0 : (y > 0 ? 1 : -1);
             for (var v in this.vecs) {
                 var vec = this.vecs[v];
                 if (vec[0] == x && vec[1] == y) return parseInt(v);
@@ -487,16 +495,16 @@
         aTrail: [], // array of the cursor trail cells' indices
         aTrailNodes: [], // array of the cursor trail node cells' indices
         aTrailRects: [], // array of rectangles comprising the cursor trail line
-        reset: function() {
+        reset: function () {
             var nW = this.nW = Math.floor(width / sizeCell);
             var nH = this.nH = Math.floor(height / sizeCell);
-            var n = (this.nWx = nW+4)* (nH+4);
+            var n = (this.nWx = nW + 4) * (nH + 4);
             this.nConquered = 0;
             this.aCells = [];
             var aAll = [];
             for (var i = 0; i < n; i++) {
                 var pos = this.pos(i), x = pos[0], y = pos[1];
-                this.aCells.push(x >= 0 && x < nW && y >= 0 && y < nH? 0 : CA_CLEAR);
+                this.aCells.push(x >= 0 && x < nW && y >= 0 && y < nH ? 0 : CA_CLEAR);
                 aAll.push(i);
             }
             this.aTrail = [];
@@ -504,55 +512,55 @@
             this.aTrailRects = [];
             fillCellArea(cfgMain.colorFill, 0, 0, nW, nH);
         },
-        render: function() {
+        render: function () {
             if (this.aTrailRects.length) {
-                for (var i = this.aTrailRects.length-1; i >= 0; i--) {
+                for (var i = this.aTrailRects.length - 1; i >= 0; i--) {
                     fillCellArea.apply(null, [cfgMain.colorFill].concat(this.aTrailRects[i]));
                 }
                 this.aTrailRects = [];
             }
         },
-        isPosIn: function(x, y) {
+        isPosIn: function (x, y) {
             return x >= 0 && x < this.nW && y >= 0 && y < this.nH;
         },
-        isPosValid: function(x, y) {
-            return x >= -2 && x < this.nW+2 && y >= -2 && y < this.nH+2;
+        isPosValid: function (x, y) {
+            return x >= -2 && x < this.nW + 2 && y >= -2 && y < this.nH + 2;
         },
         // get index of given cell in the grid
-        index: function(x, y) {
-            return this.isPosValid(x, y) ? (this.nWx)*(y+2) + x+2 : -1;
+        index: function (x, y) {
+            return this.isPosValid(x, y) ? (this.nWx) * (y + 2) + x + 2 : -1;
         },
         // convert index of a cell to appropriate position (coordinates) in the grid
-        pos: function(i) {
-            return [i % this.nWx - 2, Math.floor(i / this.nWx)-2];
+        pos: function (i) {
+            return [i % this.nWx - 2, Math.floor(i / this.nWx) - 2];
         },
-        posMap: function(arr) {
+        posMap: function (arr) {
             var _this = this;
-            return arr.map(function(v) { return _this.pos(v) });
+            return arr.map(function (v) { return _this.pos(v) });
         },
-        value: function(x, y) {
-            var i = this.index(x,y);
-            return i >= 0? this.aCells[i] : 0;
+        value: function (x, y) {
+            var i = this.index(x, y);
+            return i >= 0 ? this.aCells[i] : 0;
         },
-        set: function(x, y, v) {
-            var i = this.index(x,y);
+        set: function (x, y, v) {
+            var i = this.index(x, y);
             if (i >= 0) this.aCells[i] = v;
             return i;
         },
-        setOn: function(x, y, v) {
-            var i = this.index(x,y);
+        setOn: function (x, y, v) {
+            var i = this.index(x, y);
             if (i >= 0) this.aCells[i] |= v;
             return i;
         },
-        setOff: function(x, y, v) {
-            var i = this.index(x,y);
+        setOff: function (x, y, v) {
+            var i = this.index(x, y);
             if (i >= 0) this.aCells[i] &= ~v;
             return i;
         },
-        placeCursor: function() {
-            return [Math.floor(this.nW/2), -2];
+        placeCursor: function () {
+            return [Math.floor(this.nW / 2), -2];
         },
-        placeBalls: function(n) {
+        placeBalls: function (n) {
             var a = [], ret = [];
             for (var i = 0; i < n; i++) {
                 var k;
@@ -564,41 +572,41 @@
             }
             return ret;
         },
-        placeWarders: function(n) {
+        placeWarders: function (n) {
             var z;
             var aPos = [
-                [Math.floor(this.nW/2), this.nH+1],
-                [-1, this.nH+1], [this.nW, this.nH+1], [-1, -2], [this.nW, -2],
-                [-1, z = Math.floor(this.nH/2)], [this.nW, z],
-                [z = Math.floor(this.nW/4), this.nH+1], [3*z, this.nH+1]
+                [Math.floor(this.nW / 2), this.nH + 1],
+                [-1, this.nH + 1], [this.nW, this.nH + 1], [-1, -2], [this.nW, -2],
+                [-1, z = Math.floor(this.nH / 2)], [this.nW, z],
+                [z = Math.floor(this.nW / 4), this.nH + 1], [3 * z, this.nH + 1]
             ];
-            var i0 = (n+ 1)% 2;
-            return aPos.slice(i0, Math.min(n+ i0, 9));
+            var i0 = (n + 1) % 2;
+            return aPos.slice(i0, Math.min(n + i0, 9));
         },
-        placeSpawned: function() {
+        placeSpawned: function () {
             if (nWarders >= 9) return false;
             function dist(pos1, pos2) {
-                return Math.pow(pos1[0]- pos2[0], 2) + Math.pow(pos1[1]- pos2[1], 2);
+                return Math.pow(pos1[0] - pos2[0], 2) + Math.pow(pos1[1] - pos2[1], 2);
             }
             function find(pos0) {
                 var n = nWarders;
                 for (var l = 0; l < x0; l++) {
-                    for (var dx = -1; dx <= 1; dx+= 2) {
-                        var p = [pos0[0]+ l* dx, pos0[1]];
-                        for (var i = 0; i < n && dist(aWarders[i].pos(), p) >= 4; i++) ;
+                    for (var dx = -1; dx <= 1; dx += 2) {
+                        var p = [pos0[0] + l * dx, pos0[1]];
+                        for (var i = 0; i < n && dist(aWarders[i].pos(), p) >= 4; i++);
                         if (i >= n) return p;
                     }
                 }
                 return pos0;
             }
-            var x0 = Math.floor(this.nW/2);
-            var aPos = [[x0, this.nH+1], [x0, -2]];
+            var x0 = Math.floor(this.nW / 2);
+            var aPos = [[x0, this.nH + 1], [x0, -2]];
             var posCr = cursor.pos();
-            var posSt = dist(aPos[0], posCr) > dist(aPos[1], posCr)? aPos[0] : aPos[1];
+            var posSt = dist(aPos[0], posCr) > dist(aPos[1], posCr) ? aPos[0] : aPos[1];
             var ret = find(posSt);
             return ret;
         },
-        applyRelDirs: function(x, y, dir, aDeltas) {
+        applyRelDirs: function (x, y, dir, aDeltas) {
             var ret = [];
             for (var n = aDeltas.length, i = 0; i < n; i++) {
                 var d = (dir + aDeltas[i] + 360) % 360;
@@ -607,13 +615,13 @@
             }
             return ret;
         },
-        add2Trail: function(x, y, dir) {
+        add2Trail: function (x, y, dir) {
             var i = this.setOn(x, y, CA_TRAIL);
             if (i < 0) return;
             var n = this.aTrail.length;
             if (!n || dir !== this.dirTrail) {
-                var iNode = n? this.aTrail[n-1] : i;
-                if (!n || iNode != this.aTrailNodes[this.aTrailNodes.length-1])
+                var iNode = n ? this.aTrail[n - 1] : i;
+                if (!n || iNode != this.aTrailNodes[this.aTrailNodes.length - 1])
                     this.aTrailNodes.push(iNode);
                 if (!n) {
                     var aPos = this.applyRelDirs(x, y, dir, [180]);
@@ -623,30 +631,43 @@
             this.aTrail.push(i);
             this.dirTrail = dir;
         },
-        lastTrailLine: function() {
-            var pos0 = this.pos(this.aTrailNodes[this.aTrailNodes.length-1]),
-                pos = this.pos(this.aTrail[this.aTrail.length-1]);
+        lastTrailLine: function () {
+            var pos0 = this.pos(this.aTrailNodes[this.aTrailNodes.length - 1]),
+                pos = this.pos(this.aTrail[this.aTrail.length - 1]);
             return [
                 Math.min(pos[0], pos0[0]), Math.min(pos[1], pos0[1]),
-                Math.abs(pos[0] - pos0[0])+1, Math.abs(pos[1] - pos0[1])+1
+                Math.abs(pos[0] - pos0[0]) + 1, Math.abs(pos[1] - pos0[1]) + 1
             ];
         },
-        clearTrail: function() {
+        fullTrailLine: function () {
+            // TODO: fix
+            var lines = [];
+            for (var i = 0; i < this.aTrailNodes.length; i++) {
+                var pos0 = this.pos(this.aTrailNodes[i]),
+                pos = this.pos(this.aTrail[i]);
+                lines.push(
+                    [Math.min(pos[0], pos0[0]), Math.min(pos[1], pos0[1]),
+                    Math.abs(pos[0] - pos0[0]) + 1, Math.abs(pos[1] - pos0[1]) + 1]
+                );
+            }
+            return lines;
+        },
+        clearTrail: function () {
             this.aTrailRects = this._buildTrailRects();
             for (var n = this.aTrail.length, i = 0; i < n; i++) {
                 this.aCells[this.aTrail[i]] &= ~CA_TRAIL;
             }
             this.aTrail = []; this.aTrailNodes = [];
         },
-        getPreTrailCell: function() {
+        getPreTrailCell: function () {
             return this.cellPreTrail;
         },
         // wrapper of conquered regions detection
-        conquer: function() {
+        conquer: function () {
             var nTrail = this.aTrail.length;
             if (!nTrail) return;
             if (nTrail > 1)
-                this.aTrailNodes.push(this.aTrail[nTrail-1]);
+                this.aTrailNodes.push(this.aTrail[nTrail - 1]);
             var aConqRects = this._conquer() || this._buildTrailRects();
             this.aTrail = []; this.aTrailNodes = [];
             if (!aConqRects || !aConqRects.length) return;
@@ -666,16 +687,16 @@
             }
             aConqRects = [];
         },
-        getConqueredRatio: function() {
+        getConqueredRatio: function () {
             return this.nConquered / (this.nW * this.nH) * 100;
         },
         // conquered regions (polygons) detection:
-        _conquer: function() {
+        _conquer: function () {
             var nTrail = this.aTrail.length, nNodes = this.aTrailNodes.length;
             var aOutlineset = []; // outlines (boundaries) of found regions
             var delta;
             var bClosedTrail = nNodes >= 4 &&
-                ((delta = Math.abs(this.aTrailNodes[0] - this.aTrailNodes[nNodes-1])) == 1 || delta == this.nWx);
+                ((delta = Math.abs(this.aTrailNodes[0] - this.aTrailNodes[nNodes - 1])) == 1 || delta == this.nWx);
             if (bClosedTrail) { // if the cursor trail is self-closed
                 aOutlineset.push([this.aTrailNodes, 1]);
             }
@@ -689,16 +710,16 @@
                 for (var l = 0; l < nTrail && sum < nTrail; l++) {
                     var cellStart = this.aTrail[l];
                     var pos = this.pos(cellStart);
-                    var pos0 = l? this.pos(this.aTrail[l - 1]) : posPre;
+                    var pos0 = l ? this.pos(this.aTrail[l - 1]) : posPre;
                     var x = pos[0], y = pos[1];
                     var dir = (dirset.find(x - pos0[0], y - pos0[1]) + delta + 360) % 360;
-                    var aDirs = bEndAtNode? [] : [dir];
+                    var aDirs = bEndAtNode ? [] : [dir];
                     if (this.aTrailNodes.indexOf(cellStart) >= 0) {
-                        var pos2 = l < nTrail - 1? this.pos(this.aTrail[l + 1]) : posCr;
+                        var pos2 = l < nTrail - 1 ? this.pos(this.aTrail[l + 1]) : posCr;
                         dir = (dirset.find(pos2[0] - x, pos2[1] - y) + delta + 360) % 360;
                         if (dir != aDirs[0]) aDirs.push(dir);
                     }
-                    if (this.aTrail[l] == this.aTrailNodes[iLastNode+1]) ++iLastNode;
+                    if (this.aTrail[l] == this.aTrailNodes[iLastNode + 1]) ++iLastNode;
                     var ret = 0;
                     for (var nDs = aDirs.length, j = 0; j < nDs && !ret; j++) {
                         dir = aDirs[j];
@@ -729,7 +750,7 @@
                 return el1[1] - el2[1];
             });
             var aRects = [], n = aOutlineset.length, bUnbroken = true;
-            for (var i = 0; i < (bUnbroken? n-1 : n); i++) {
+            for (var i = 0; i < (bUnbroken ? n - 1 : n); i++) {
                 ret = this._buildConquerRects(aOutlineset[i][0]);
                 if (ret)
                     aRects = aRects.concat(ret);
@@ -738,12 +759,12 @@
             }
             if (!aRects.length)
                 return false;
-            return bAddTrailRects? aRects.concat(this._buildTrailRects()) : aRects;
+            return bAddTrailRects ? aRects.concat(this._buildTrailRects()) : aRects;
         },
         // find outline of conquered region (polygon)
         //  from given cell position (x0, y0) and starting direction (dir)
         //  as well as indices of starting cell and last node cell in the trail:
-        _findOutline: function(x0, y0, dir, iStartCell, iLastNode) {
+        _findOutline: function (x0, y0, dir, iStartCell, iLastNode) {
             function isClear(arr) {
                 return arr[3] & CA_CLEAR;
             }
@@ -752,23 +773,23 @@
                 lim = 6 * (this.nW + this.nH), n = 0, bClosed = false;
             do {
                 bClosed = n && x == x0 && y == y0;
-                var cellCurr = this.index(x,y), iUniq = aUniqNodes.indexOf(cellCurr);
-                var aCurrUsed = iUniq >= 0? aUsedDirs[iUniq] : [];
-                var aCurrBack = iUniq >= 0? aBackDirs[iUniq] : [];
-                var aPosOpts = this.applyRelDirs(x,y, dir, [-90, 90, 0]);
-                var aTestDirs = [180+45, -45, 45, 180-45, -45, 45];
+                var cellCurr = this.index(x, y), iUniq = aUniqNodes.indexOf(cellCurr);
+                var aCurrUsed = iUniq >= 0 ? aUsedDirs[iUniq] : [];
+                var aCurrBack = iUniq >= 0 ? aBackDirs[iUniq] : [];
+                var aPosOpts = this.applyRelDirs(x, y, dir, [-90, 90, 0]);
+                var aTestDirs = [180 + 45, -45, 45, 180 - 45, -45, 45];
                 var aPassIdx = [], aPassWeight = [];
                 for (var i = 0; i < 3; i++) {
                     var d = aPosOpts[i][2];
                     if (aCurrUsed.indexOf(d) >= 0) continue;
                     if (isClear(aPosOpts[i])) continue;
-                    var aTestOpts = this.applyRelDirs(x,y, dir, aTestDirs.slice(i*2,i*2+2));
+                    var aTestOpts = this.applyRelDirs(x, y, dir, aTestDirs.slice(i * 2, i * 2 + 2));
                     var b1 = isClear(aTestOpts[0]), b2 = isClear(aTestOpts[1]);
-                    var b = b1 || b2 || (i == 2? isClear(aPosOpts[0]) || isClear(aPosOpts[1]) : isClear(aPosOpts[2]));
+                    var b = b1 || b2 || (i == 2 ? isClear(aPosOpts[0]) || isClear(aPosOpts[1]) : isClear(aPosOpts[2]));
                     if (!b) continue;
                     aPassIdx.push(i);
                     aPassWeight.push(
-                        (b1 && b2? 0 : b1 || b2? 1 : 2) + (aCurrBack.indexOf(d) >= 0? 3 : 0)
+                        (b1 && b2 ? 0 : b1 || b2 ? 1 : 2) + (aCurrBack.indexOf(d) >= 0 ? 3 : 0)
                     );
                 }
                 var nPass = aPassIdx.length;
@@ -778,11 +799,11 @@
                         min = aPassWeight[i]; idx = aPassIdx[i];
                     }
                 }
-                var pos = nPass? aPosOpts[idx] : this.applyRelDirs(x,y, dir, [180])[0];
+                var pos = nPass ? aPosOpts[idx] : this.applyRelDirs(x, y, dir, [180])[0];
                 var dir0 = dir;
                 x = pos[0]; y = pos[1]; dir = pos[2];
                 if (pos[2] == dir0) continue;
-                nPass? aNodes.push(cellCurr) : aNodes.push(cellCurr, cellCurr);
+                nPass ? aNodes.push(cellCurr) : aNodes.push(cellCurr, cellCurr);
                 dir0 = (dir0 + 180) % 360;
                 if (iUniq < 0) {
                     aUniqNodes.push(cellCurr);
@@ -798,34 +819,34 @@
             if (!(n < lim)) return false;
             if (bClosed) {
                 aNodes.push(cellCurr);
-                if (aNodes[0] != (cellCurr = this.index(x0,y0))) aNodes.unshift(cellCurr);
+                if (aNodes[0] != (cellCurr = this.index(x0, y0))) aNodes.unshift(cellCurr);
                 var nNodes = aNodes.length;
-                if (nNodes % 2 && aNodes[0] == aNodes[nNodes-1]) aNodes.pop();
-                return [aNodes, n+1, 0];
+                if (nNodes % 2 && aNodes[0] == aNodes[nNodes - 1]) aNodes.pop();
+                return [aNodes, n + 1, 0];
             }
-            var cellStart = this.aTrail[iStartCell], cellEnd = this.index(x,y);
+            var cellStart = this.aTrail[iStartCell], cellEnd = this.index(x, y);
             aNodes.push(cellEnd);
             var nTrail = this.aTrail.length;
             var aTangentNodes = [cellStart];
-            for (var l = iStartCell+1; l < nTrail && this.aTrail[l] != cellEnd; l++) {
-                if (this.aTrail[l] == this.aTrailNodes[iLastNode+1])
+            for (var l = iStartCell + 1; l < nTrail && this.aTrail[l] != cellEnd; l++) {
+                if (this.aTrail[l] == this.aTrailNodes[iLastNode + 1])
                     aTangentNodes.push(this.aTrailNodes[++iLastNode]);
             }
-            var bEndAtNode = this.aTrail[l] == this.aTrailNodes[iLastNode+1];
+            var bEndAtNode = this.aTrail[l] == this.aTrailNodes[iLastNode + 1];
             if (bEndAtNode) l++;
             var lenTangent = l - iStartCell;
             return [
-                aNodes.concat(aTangentNodes.reverse()), n+1+lenTangent, lenTangent,
+                aNodes.concat(aTangentNodes.reverse()), n + 1 + lenTangent, lenTangent,
                 iLastNode, l, bEndAtNode
             ];
         },
         // break the cursor trail line into a set of rectangles:
-        _buildTrailRects: function() {
+        _buildTrailRects: function () {
             if (this.aTrailNodes.length == 1)
                 this.aTrailNodes.push(this.aTrailNodes[0]);
             var aRects = [];
-            for (var n = this.aTrailNodes.length, i = 0; i < n-1; i++) {
-                var pos1 = this.pos(this.aTrailNodes[i]), pos2 = this.pos(this.aTrailNodes[i+1]);
+            for (var n = this.aTrailNodes.length, i = 0; i < n - 1; i++) {
+                var pos1 = this.pos(this.aTrailNodes[i]), pos2 = this.pos(this.aTrailNodes[i + 1]);
                 var x0 = Math.min(pos1[0], pos2[0]), y0 = Math.min(pos1[1], pos2[1]);
                 var w = Math.max(pos1[0], pos2[0]) - x0 + 1, h = Math.max(pos1[1], pos2[1]) - y0 + 1;
                 var rect = [x0, y0, w, h];
@@ -834,11 +855,11 @@
             return aRects;
         },
         // break region specified by its outline into a set of rectangles:
-        _buildConquerRects: function(aOutline) {
+        _buildConquerRects: function (aOutline) {
             // checks if rectangle contains at least one ball (enemy):
             function containBall(rect) {
-                var x1 = rect[0], x2 = x1+ rect[2] - 1;
-                var y1 = rect[1], y2 = y1+ rect[3] - 1;
+                var x1 = rect[0], x2 = x1 + rect[2] - 1;
+                var y1 = rect[1], y2 = y1 + rect[3] - 1;
                 for (var i = 0; i < nBalls; i++) {
                     var o = aBalls[i], x = o.x, y = o.y;
                     if (x >= x1 && x <= x2 && y >= y1 && y <= y2) return true;
@@ -849,10 +870,10 @@
             var aNodes = this.posMap(aOutline);
             var n = aNodes.length;
             if (n > 4 && n % 2 != 0) {
-                var b1 = aNodes[0][0] == aNodes[n-1][0], b2;
-                if (b1 ^ aNodes[0][1] == aNodes[n-1][1]) {
-                    b2 = aNodes[n-2][0] == aNodes[n-1][0];
-                    if (!(b2 ^ b1) && b2 ^ aNodes[n-2][1] == aNodes[n-1][1])
+                var b1 = aNodes[0][0] == aNodes[n - 1][0], b2;
+                if (b1 ^ aNodes[0][1] == aNodes[n - 1][1]) {
+                    b2 = aNodes[n - 2][0] == aNodes[n - 1][0];
+                    if (!(b2 ^ b1) && b2 ^ aNodes[n - 2][1] == aNodes[n - 1][1])
                         aNodes.pop();
                     b2 = aNodes[0][0] == aNodes[1][0];
                     if (!(b2 ^ b1) && b2 ^ aNodes[0][1] == aNodes[1][1])
@@ -869,69 +890,69 @@
                 var dim1 = 0, dim2 = 0, iBase = 0, iCo = 0;
                 var posB1, posB2, posT1, posT2;
                 for (var i = 0; i < n; i++) {
-                    posB1 = aNodes[i]; posB2 = aNodes[(i+1)%n];
-                    posT1 = aNodes[(i-1+n)%n]; posT2 = aNodes[(i+2)%n];
-                    var dir = dirset.find(posT1[0]-posB1[0], posT1[1]-posB1[1]);
-                    if (dir != dirset.find(posT2[0]-posB2[0], posT2[1]-posB2[1])) continue;
-                    var dirTest = Math.floor((dirset.find(posB2[0]-posB1[0], posB2[1]-posB1[1])+ dir) / 2);
-                    var vec = dirset.get(dirTest - dirTest% 45);
-                    if (this.value([posB1[0]+ vec[0], posB1[1]+ vec[1]]) & CA_CLEAR) continue;
+                    posB1 = aNodes[i]; posB2 = aNodes[(i + 1) % n];
+                    posT1 = aNodes[(i - 1 + n) % n]; posT2 = aNodes[(i + 2) % n];
+                    var dir = dirset.find(posT1[0] - posB1[0], posT1[1] - posB1[1]);
+                    if (dir != dirset.find(posT2[0] - posB2[0], posT2[1] - posB2[1])) continue;
+                    var dirTest = Math.floor((dirset.find(posB2[0] - posB1[0], posB2[1] - posB1[1]) + dir) / 2);
+                    var vec = dirset.get(dirTest - dirTest % 45);
+                    if (this.value([posB1[0] + vec[0], posB1[1] + vec[1]]) & CA_CLEAR) continue;
                     var b = false, t, w, k;
-                    if ((t = Math.abs(posB1[0]-posB2[0])) > dim1) {
+                    if ((t = Math.abs(posB1[0] - posB2[0])) > dim1) {
                         b = true; k = 0; w = t;
                     }
-                    if ((t = Math.abs(posB1[1]-posB2[1])) > dim1) {
+                    if ((t = Math.abs(posB1[1] - posB2[1])) > dim1) {
                         b = true; k = 1; w = t;
                     }
                     if (!b) continue;
-                    var k2 = (k+1)%2;
+                    var k2 = (k + 1) % 2;
                     vec = dirset.get(dir);
                     var sgn = vec[k2];
                     var co2 = posB1[k2];
                     var left = Math.min(posB1[k], posB2[k]), right = Math.max(posB1[k], posB2[k]);
-                    var min = Math.min(sgn* (posT1[k2]- co2), sgn* (posT2[k2]- co2));
-                    for (var j = i% 2; j < n; j+= 2) {
+                    var min = Math.min(sgn * (posT1[k2] - co2), sgn * (posT2[k2] - co2));
+                    for (var j = i % 2; j < n; j += 2) {
                         if (j == i) continue;
-                        var pos = aNodes[j], pos2 = aNodes[(j+1)%n], h;
-                        if (pos[k2] == pos2[k2] && (h = sgn*(pos[k2]- co2)) >= 0 && h < min &&
+                        var pos = aNodes[j], pos2 = aNodes[(j + 1) % n], h;
+                        if (pos[k2] == pos2[k2] && (h = sgn * (pos[k2] - co2)) >= 0 && h < min &&
                             pos[k] > left && pos[k] < right && pos2[k] > left && pos2[k] < right)
                             break;
                     }
                     if (j < n) continue;
-                    dim1 = w; dim2 = sgn*min;
+                    dim1 = w; dim2 = sgn * min;
                     iBase = i; iCo = k;
                 }
-                var iB2 = (iBase+1)%n, iT1 = (iBase-1+n)%n, iT2 = (iBase+2)%n;
+                var iB2 = (iBase + 1) % n, iT1 = (iBase - 1 + n) % n, iT2 = (iBase + 2) % n;
                 posB1 = aNodes[iBase];
                 posB2 = aNodes[iB2];
                 posT1 = aNodes[iT1];
                 posT2 = aNodes[iT2];
                 var aDim = [0, 0], pos0 = [];
-                var iCo2 = (iCo+1)%2;
+                var iCo2 = (iCo + 1) % 2;
                 aDim[iCo] = dim1;
                 aDim[iCo2] = dim2;
                 pos0[iCo] = Math.min(posB1[iCo], posB2[iCo]);
-                pos0[iCo2] = Math.min(posB1[iCo2], posB2[iCo2]) + (aDim[iCo2] < 0? aDim[iCo2]: 0);
-                var rect = [pos0[0], pos0[1], Math.abs(aDim[0])+1, Math.abs(aDim[1])+1];
+                pos0[iCo2] = Math.min(posB1[iCo2], posB2[iCo2]) + (aDim[iCo2] < 0 ? aDim[iCo2] : 0);
+                var rect = [pos0[0], pos0[1], Math.abs(aDim[0]) + 1, Math.abs(aDim[1]) + 1];
                 var bC = Math.abs(posT1[iCo2] - posB1[iCo2]) == Math.abs(dim2);
                 if (containBall(rect)) return false;
                 aRects.push(rect);
                 if (bC) {
                     posB2[iCo2] += dim2;
-                    aNodes.splice(iBase,1);
-                    aNodes.splice(iT1 < iBase? iT1 : iT1-1, 1);
+                    aNodes.splice(iBase, 1);
+                    aNodes.splice(iT1 < iBase ? iT1 : iT1 - 1, 1);
                 }
                 else {
                     posB1[iCo2] += dim2;
-                    aNodes.splice(iT2,1);
-                    aNodes.splice(iB2 < iT2? iB2 : iB2-1, 1);
+                    aNodes.splice(iT2, 1);
+                    aNodes.splice(iB2 < iT2 ? iB2 : iB2 - 1, 1);
                 }
             }
-            var aX = aNodes.map(function(v) {return v[0]});
-            var aY = aNodes.map(function(v) {return v[1]});
+            var aX = aNodes.map(function (v) { return v[0] });
+            var aY = aNodes.map(function (v) { return v[1] });
             var x0 = Math.min.apply(null, aX);
             var y0 = Math.min.apply(null, aY);
-            rect = [x0, y0, Math.max.apply(null, aX)-x0+1, Math.max.apply(null, aY)-y0+1];
+            rect = [x0, y0, Math.max.apply(null, aX) - x0 + 1, Math.max.apply(null, aY) - y0 + 1];
             if (containBall(rect)) return false;
             aRects.push(rect);
             return aRects;
@@ -948,20 +969,20 @@
         state: false, // current state (true - trial)
         state0: false, // previous state
         // reset the cursor position:
-        reset: function(x, y, bUnlock) {
+        reset: function (x, y, bUnlock) {
             var bPre = bUnlock && cellset.value(this.x, this.y) & CA_CLEAR;
-            this.x0 = bPre? this.x : x;
-            this.y0 = bPre? this.y : y;
+            this.x0 = bPre ? this.x : x;
+            this.y0 = bPre ? this.y : y;
             this.x = x;
             this.y = y;
             this.dir = this.state = this.state0 = false;
         },
         // update current position - move by given distance:
-        update: function(dist) {
+        update: function (dist) {
             if (this.dir === false) return;
             var x = this.x, y = this.y;
             var vec = dirset.get(this.dir), vecX = vec[0], vecY = vec[1];
-            var bEnd =  false;
+            var bEnd = false;
             for (var n = 0; n < dist; n++) {
                 if (cellset.index(x + vecX, y + vecY) < 0) {
                     this.dir = false; break;
@@ -980,7 +1001,7 @@
             this.x = x;
             this.y = y;
             if (!bEnd) return;
-            if (cellset.getPreTrailCell() == cellset.index(x,y))
+            if (cellset.getPreTrailCell() == cellset.index(x, y))
                 bCollision = true;
             else {
                 this.dir = this.state = false;
@@ -988,7 +1009,7 @@
             }
         },
         // render current position:
-        render: function() {
+        render: function () {
             if (this.x0 == this.x && this.y0 == this.y) {
                 if (tLastFrame) return;
             }
@@ -1009,15 +1030,15 @@
             drawCellImg(imgCursor, this.x, this.y);
         },
         // get current position:
-        pos: function() {
+        pos: function () {
             return [this.x, this.y];
         },
         // get current movement direction:
-        getDir: function() {
+        getDir: function () {
             return this.dir;
         },
         // set/change movement direction:
-        setDir: function(dir) {
+        setDir: function (dir) {
             if (dir === this.dir) return;
             if (this.state && this.dir !== false && dir !== false && Math.abs(dir - this.dir) == 180)
                 return;
@@ -1032,25 +1053,25 @@
         this.x0 = x; // previous x position
         this.y0 = y; // previous y position
         var aDirs = [45, 135, 225, 315];
-        this.dir = dir === undefined? aDirs[Math.floor(Math.random()*4)] : dir; // current movement direction (angle in degrees)
+        this.dir = dir === undefined ? aDirs[Math.floor(Math.random() * 4)] : dir; // current movement direction (angle in degrees)
         this.type = Boolean(type); // (boolean) type of enemy (false - Ball, true - Warder)
     }
     // Enemy class methods:
     Enemy.prototype = {
         // reset enemy position:
-        reset: function(x, y) {
+        reset: function (x, y) {
             this.x = x;
             this.y = y;
         },
         // update position - move by given distance:
-        update: function(dist) {
+        update: function (dist) {
             var ret = this._calcPath(this.x, this.y, dist, this.dir);
             this.x = ret.x;
             this.y = ret.y;
             this.dir = ret.dir;
         },
         // render current position:
-        render: function() {
+        render: function () {
             if (this.x0 == this.x && this.y0 == this.y) {
                 if (tLastFrame) return;
             }
@@ -1058,17 +1079,17 @@
                 if (this.type && cellset.isPosIn(this.x0, this.y0))
                     clearCellArea(this.x0, this.y0);
                 else
-                    fillCellArea(this.type? cfgMain.colorBorder : cfgMain.colorFill, this.x0, this.y0);
+                    fillCellArea(this.type ? cfgMain.colorBorder : cfgMain.colorFill, this.x0, this.y0);
                 this.x0 = this.x; this.y0 = this.y;
             }
-            drawCellImg(this.type? imgWarder : imgBall, this.x, this.y);
+            drawCellImg(this.type ? imgWarder : imgBall, this.x, this.y);
         },
         // current position:
-        pos: function() {
+        pos: function () {
             return [this.x, this.y];
         },
         // calculate movement path:
-        _calcPath: function(x, y, dist, dir) {
+        _calcPath: function (x, y, dist, dir) {
             var vec = dirset.get(dir), vecX = vec[0], vecY = vec[1];
             var posCr = cursor.pos();
             var xC = posCr[0], yC = posCr[1],
@@ -1089,20 +1110,20 @@
                     break;
                 x = xt; y = yt;
             }
-            return {x: x, y: y, dir: dir};
+            return { x: x, y: y, dir: dir };
         },
         // calculate bounce direction if any:
-        _calcBounce: function(x, y, dir, xt, yt) {
-            var ret = cellset.applyRelDirs(x,y, dir, [-45, 45]);
+        _calcBounce: function (x, y, dir, xt, yt) {
+            var ret = cellset.applyRelDirs(x, y, dir, [-45, 45]);
             var b1 = this.type ^ ret[0][3] & CA_CLEAR,
                 b2 = this.type ^ ret[1][3] & CA_CLEAR;
-            return b1 ^ b2?
-                (b1? dir + 90 : dir + 270) % 360 :
-                this.type ^ cellset.value(xt, yt) & CA_CLEAR || b1 && b2?
-                    (dir+180) % 360 : false;
+            return b1 ^ b2 ?
+                (b1 ? dir + 90 : dir + 270) % 360 :
+                this.type ^ cellset.value(xt, yt) & CA_CLEAR || b1 && b2 ?
+                    (dir + 180) % 360 : false;
         },
         // checks if enemy position is in collision with the cursor trail:
-        _isCollision: function(x, y, dir) {
+        _isCollision: function (x, y, dir) {
             if (cellset.value(x, y) & CA_TRAIL) return true;
             var aDirs = [-45, 45, -90, 90];
             for (var i = 0; i < 4; i++) {
@@ -1112,11 +1133,11 @@
             return false;
         }
     };
-    
+
 
     function merge(dest, src, bFilter) {
         if (!src) return dest;
-        for(var key in dest) {
+        for (var key in dest) {
             if (!dest.hasOwnProperty(key) || !src.hasOwnProperty(key)) continue;
             var v = src[key];
             if ((!bFilter || v) && (typeof v != 'number' || v >= 0))
