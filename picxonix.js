@@ -230,7 +230,7 @@
     function applyLevel(img, data) {
         imgPic = img;
         merge(cfgLevel, data, true);
-        setLevelData(img.width, img.height);
+        // setLevelData(img.width, img.height);
         console.log("image width: " + img.width + ", height: " + img.height)
         ctxMain.canvas.width = width + 4 * sizeCell;
         ctxMain.canvas.height = height + 4 * sizeCell;
