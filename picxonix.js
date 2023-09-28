@@ -72,7 +72,7 @@
         height: 400,
         sizeCell: 10,
         colorFill: '#000000',
-        colorBorder: '#333333',
+        colorBorder: '#000000',
         colorBall: '#ffffff',
         colorBallIn: '#000000',
         colorWarder: '#f80000',
